@@ -38,7 +38,13 @@ if (${$cmdline_options{rc}}) {
     exit 0;
 }
 
-require TAEB;
+require TAEB::Container;
+
+my $c = TAEB::Container->new->container;
+
+=for disable
+
+# this should be changed to poke directly into the container
 
 TAEB->config->override_config($_) for @config_overrides;
 
@@ -46,48 +52,56 @@ if (${$cmdline_options{quit}}) {
     TAEB->config->override_config('{"ai": "Quit"}');
 }
 
-my $tstp = $SIG{TSTP} = sub {
-    # if we don't invoke TSTP then we won't be suspended
-    $SIG{TSTP} = 'DEFAULT';
+=cut
 
-    TAEB->display->deinitialize;
+# XXX: make this a method on the TAEB class?
+sub setup_sighandlers {
+    my $taeb = shift;
 
-    kill TSTP => $$;
-};
+    my $tstp = $SIG{TSTP} = sub {
+        # if we don't invoke TSTP then we won't be suspended
+        $SIG{TSTP} = 'DEFAULT';
 
-$SIG{CONT} = sub {
-    $SIG{TSTP} = $tstp;
+        $taeb->display->deinitialize;
 
-    TAEB->display->reinitialize;
-};
+        kill TSTP => $$;
+    };
 
-$SIG{TERM} = sub {
-    $SIG{TERM} = 'DEFAULT';
+    $SIG{CONT} = sub {
+        $SIG{TSTP} = $tstp;
 
-    TAEB->display->deinitialize;
+        $taeb->display->reinitialize;
+    };
 
-    kill TERM => $$;
-};
+    $SIG{TERM} = sub {
+        $SIG{TERM} = 'DEFAULT';
 
-$SIG{USR1} = sub {
-    TAEB->debugger->console->repl(undef);
-};
-$SIG{USR2} = sub {
-    die "Dying on user request to give a stack trace";
-};
+        $taeb->display->deinitialize;
+
+        kill TERM => $$;
+    };
+
+    $SIG{USR1} = sub {
+        $taeb->debugger->console->repl(undef);
+    };
+    $SIG{USR2} = sub {
+        die "Dying on user request to give a stack trace";
+    };
+}
 
 $| = 1;
 
 while (1) {
+    my $taeb = $c->fetch('app')->get;
+    setup_sighandlers($taeb);
     eval {
         local $SIG{INT} = sub { die "Interrupted.\n"; $loop = 0 };
-        my $report = TAEB->play;
+        my $report = $taeb->play;
         print $report->as_string;
     };
 
     last unless $loop;
-
-    TAEB->reset_state;
+    undef $taeb;
 
     print ' ';
     for (reverse 1..5) {
