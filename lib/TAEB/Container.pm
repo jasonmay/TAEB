@@ -133,17 +133,7 @@ sub _build_container {
         $self->_plugin_container($_) for qw(Interface Display AI);
 
         service vt => (
-            block => sub {
-                my $s = shift;
-                my $vt = TAEB::VT->new(
-                    cols => 80,
-                    rows => 24,
-                    log  => $s->param('log')
-                );
-                $vt->option_set(LINEWRAP => 1);
-                $vt->option_set(LFTOCRLF => 1);
-                return $vt;
-            },
+            class => 'TAEB::VT',
             dependencies => wire_names(qw(Log/log)),
         );
 

@@ -3,10 +3,30 @@ use TAEB::OO;
 use MooseX::NonMoose;
 extends 'Term::VT102::ZeroBased';
 
+has log => (
+    is       => 'ro',
+    isa      => 'TAEB::Logger',
+    required => 1,
+);
+
 has topline => (
     is  => 'rw',
     isa => 'Str',
 );
+
+sub FOREIGNBUILDARGS {
+    (
+        cols => 80,
+        rows => 24,
+        @_,
+    );
+};
+
+sub BUILD {
+    my $self = shift;
+    $self->option_set(LINEWRAP => 1);
+    $self->option_set(LFTOCRLF => 1);
+}
 
 after process => sub {
     my $self = shift;
