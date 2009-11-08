@@ -110,34 +110,18 @@ sub _build_container {
         );
 
         container 'Interface' => as {
-            service class     => $config->get_interface_class;
             service config    => $config->get_interface_config;
             service interface => (
-                block => sub {
-                    my $s = shift;
-                    my $class = $s->param('class');
-                    return $class->new(
-                        config => $s->param('config'),
-                        log    => $s->param('log'),
-                    );
-                },
+                class        => $config->get_interface_class,
                 lifecycle    => 'Singleton',
-                dependencies => wire_names(qw(class config log)),
+                dependencies => wire_names(qw(config log)),
             );
         };
 
         container 'Display' => as {
-            service class   => $config->get_display_class;
             service config  => $config->get_interface_config;
             service display => (
-                block => sub {
-                    my $s = shift;
-                    my $class = $s->param('class');
-                    return $class->new(
-                        config => $s->param('config'),
-                        log    => $s->param('log'),
-                    );
-                },
+                class        => $config->get_display_class,
                 lifecycle    => 'Singleton',
                 dependencies => wire_names(qw(class config log)),
             );
@@ -147,14 +131,7 @@ sub _build_container {
             service class  => $config->get_ai_class;
             service config => $config->get_ai_config;
             service ai     => ( # persistent
-                block => sub {
-                    my $s = shift;
-                    my $class = $s->param('class');
-                    return $class->new(
-                        config => $s->param('config'),
-                        log    => $s->param('log'),
-                    );
-                },
+                class        => $config->get_ai_class,
                 lifecycle    => 'Singleton',
                 dependencies => wire_names(qw(class config log)),
             );
