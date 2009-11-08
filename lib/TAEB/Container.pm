@@ -58,8 +58,11 @@ sub _build_config_path {
 }
 
 sub _log_container {
+    my $self = shift;
+    my $container = $self;
+
     container 'Log' => as {
-        service dir => $config->taebdir_file('log');
+        service dir => $self->config->taebdir_file('log');
         service log => (
             block => sub {
                 my $s = shift;
