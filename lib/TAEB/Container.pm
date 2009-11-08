@@ -57,14 +57,9 @@ sub _build_config_path {
     return $ENV{TAEBDIR};
 }
 
-sub _build_container {
-    my $self = shift;
-    my $config = $self->config;
-    my $container = $self;
-
-    container 'TAEB' => as {
-        # XXX: need to make this an attribute on TAEB::Logger
-        service log_dir => $config->taebdir_file('log');
+sub _log_container {
+    container 'Log' => as {
+        service dir => $config->taebdir_file('log');
         service log => (
             block => sub {
                 my $s = shift;
@@ -106,36 +101,36 @@ sub _build_container {
                 return $log;
             },
             lifecycle    => 'Singleton',
-            dependencies => wire_names(qw(log_dir)),
+            dependencies => wire_names(qw(dir)),
         );
+    };
+}
 
-        container 'Interface' => as {
-            service config    => $config->get_interface_config;
-            service interface => (
-                class        => $config->get_interface_class,
-                lifecycle    => 'Singleton',
-                dependencies => wire_names(qw(config log)),
-            );
-        };
+sub _plugin_container {
+    my $self = shift;
+    my ($plugin) = @_;
+    my $lc_plugin = lc($plugin);
+    my $config_method = "get_${lc_plugin}_config";
+    my $class_method = "get_${lc_plugin}_class";
 
-        container 'Display' => as {
-            service config  => $config->get_interface_config;
-            service display => (
-                class        => $config->get_display_class,
-                lifecycle    => 'Singleton',
-                dependencies => wire_names(qw(class config log)),
-            );
-        };
+    container $plugin => as {
+        service config     => $self->config->$config_method;
+        service $lc_plugin => (
+            class        => $self->config->$class_method,
+            lifecycle    => 'Singleton',
+            dependencies => wire_names(qw(config Log/log)),
+        );
+    };
+}
 
-        container 'AI' => as {
-            service class  => $config->get_ai_class;
-            service config => $config->get_ai_config;
-            service ai     => ( # persistent
-                class        => $config->get_ai_class,
-                lifecycle    => 'Singleton',
-                dependencies => wire_names(qw(class config log)),
-            );
-        };
+sub _build_container {
+    my $self = shift;
+    my $config = $self->config;
+    my $container = $self;
+
+    container 'TAEB' => as {
+        $self->_log_container;
+        $self->_plugin_container($_) for qw(Interface Display AI);
 
         service vt => (
             block => sub {
@@ -149,48 +144,48 @@ sub _build_container {
                 $vt->option_set(LFTOCRLF => 1);
                 return $vt;
             },
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service scraper => (
             class => 'TAEB::ScreenScraper',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service publisher => (
             class => 'TAEB::Publisher',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service debugger => (
             class => 'TAEB::Debug',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service dungeon => ( # persistent
             class => 'TAEB::World::Dungeon',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service senses => ( # persistent
             class => 'TAEB::Senses',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service spells => ( # persistent
             class => 'TAEB::World::Spells',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service item_pool => ( # persistent
             class => 'TAEB::World::ItemPool',
-            dependencies => wire_names(qw(log)),
+            dependencies => wire_names(qw(Log/log)),
         );
 
         service app => (
             class => 'TAEB',
             dependencies => wire_names(qw(
-                log
+                Log/log
                 Interface/interface Display/display AI/ai
                 vt scraper publisher debugger dungeon senses spells item_pool
             )),
