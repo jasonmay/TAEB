@@ -6,6 +6,7 @@ use Cwd 'abs_path';
 use File::Spec;
 use File::HomeDir;
 use Log::Dispatch::Null;
+use Scalar::Util qw(weaken);
 use TAEB::Config;
 use TAEB::Logger;
 use TAEB::VT;
@@ -59,7 +60,7 @@ sub _build_config_path {
 
 sub _log_container {
     my $self = shift;
-    my $container = $self;
+    my $container = weaken($self);
 
     container 'Log' => as {
         service dir => $self->config->taebdir_file('log');
@@ -129,7 +130,7 @@ sub _plugin_container {
 sub _build_container {
     my $self = shift;
     my $config = $self->config;
-    my $container = $self;
+    my $container = weaken($self);
 
     container 'TAEB' => as {
         $self->_log_container;
