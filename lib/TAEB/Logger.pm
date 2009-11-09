@@ -9,9 +9,9 @@ with 'TAEB::Role::Config';
 
 has default_outputs => (
     is      => 'ro',
-    isa     => 'ArrayRef[Log::Dispatch::Output]',
+    isa     => 'HashRef[Log::Dispatch::Output]',
     lazy    => 1,
-    default => sub { [] },
+    default => sub { {} },
 );
 
 has bt_levels => (
@@ -136,7 +136,7 @@ after add_channel => sub {
     my $self = shift;
     my $channel_name = shift;
 
-    for my $output (@{ $self->default_outputs }) {
+    for my $output (values %{ $self->default_outputs }) {
         $self->channel($channel_name)->add($output);
     }
 };
@@ -199,8 +199,16 @@ sub add_as_default {
     my $self = shift;
     my $output = shift;
 
+    $self->default_outputs->{$output->name} = $output;
     $self->add($output);
-    push @{ $self->default_outputs }, $output;
+}
+
+sub remove_as_default {
+    my $self = shift;
+    my $output_name = shift;
+
+    delete $self->default_outputs->{$output_name};
+    $self->remove($output_name);
 }
 
 sub _format {
