@@ -2,14 +2,12 @@ package TAEB::Container;
 use TAEB::OO;
 use Bread::Board;
 
-use Cwd 'abs_path';
+use Cwd qw(abs_path);
 use File::Spec;
 use File::HomeDir;
 use Log::Dispatch::Null;
-use Scalar::Util qw(weaken);
 use TAEB::Config;
-use TAEB::Logger;
-use TAEB::VT;
+use TAEB::Util qw(weaken);
 
 has config_file => (
     is      => 'ro',
