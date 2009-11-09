@@ -66,7 +66,6 @@ sub _log_container {
         service dir => $self->config->taebdir_file('log');
         service log => (
             class        => 'TAEB::Logger',
-            lifecycle    => 'Singleton',
             dependencies => wire_names(qw(dir)),
         );
     };
@@ -83,7 +82,6 @@ sub _plugin_container {
         service config     => $self->config->$config_method;
         service $lc_plugin => (
             class        => $self->config->$class_method,
-            lifecycle    => 'Singleton',
             dependencies => wire_names(qw(config Log/log)),
         );
     };
