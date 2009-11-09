@@ -4,7 +4,7 @@ use warnings;
 
 use Carp 'confess';
 
-use Scalar::Util qw(blessed isweak refaddr weaken);
+use Scalar::Util qw(blessed isweak refaddr reftype weaken);
 use List::Util qw(first min max minstr maxstr reduce sum shuffle);
 use List::MoreUtils ':all';
 
@@ -42,7 +42,7 @@ use Sub::Exporter -setup => {
         qw(display display_ro assert assert_is item_menu hashref_menu object_menu),
         qw(list_menu numeric_color string_color),
         keys %colors,
-        qw(blessed isweak refaddr weaken),
+        qw(blessed isweak refaddr reftype weaken),
         @List::Util::EXPORT_OK,
         @List::MoreUtils::EXPORT_OK,
     ],
