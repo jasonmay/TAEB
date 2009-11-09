@@ -3,7 +3,7 @@ use TAEB::OO;
 use Log::Dispatch::File;
 use Carp;
 use MooseX::NonMoose;
-use TAEB::Util qw/weaken/;
+use TAEB::Util qw/weaken reftype/;
 extends 'Log::Dispatch::Channels';
 with 'TAEB::Role::Config';
 
@@ -109,6 +109,18 @@ has twitter => (
         $self->add_as_default($twitter);
         return $twitter;
     },
+);
+
+has warn_handler => (
+    is        => 'rw',
+    clearer   => '_clear_warn_handler',
+    predicate => '_has_warn_handler',
+);
+
+has die_handler => (
+    is => 'rw',
+    clearer   => '_clear_die_handler',
+    predicate => '_has_die_handler',
 );
 
 sub BUILD {
@@ -337,6 +349,51 @@ before _clean_log_dir => sub {
 };
 sub _clean_log_dir {
     unlink for (glob logfile_for('*'));
+}
+
+sub setup_handlers {
+    my $self = shift;
+
+    if ($self->_has_warn_handler || $self->_has_die_handler) {
+        confess("Logger is trying to setup warn/die handlers multiple times");
+    }
+
+    my $warn_handler = $SIG{__WARN__};
+    $self->_warn_handler($warn_handler);
+    $SIG{__WARN__} = sub {
+        my $method = $_[0] =~ /^Use of uninitialized / ? 'undef' : 'perl';
+        $self->$method($_[0], level => 'warning');
+        $warn_handler->(@_) if reftype($warn_handler) eq 'CODE';
+    };
+
+    my $die_handler = $SIG{__DIE__};
+    $self->_die_handler($die_handler);
+    $SIG{__DIE__} = sub {
+        my $error = shift;
+
+        # We want only the first line
+        (my $message = $error) =~ s/\n.*//s;
+
+        if ($message =~ /^The game has (ended|been saved)\./) {
+            $self->main($message, level => 'info');
+        }
+        else {
+            my $level = $message =~ /^Interrupted\./
+                      ? 'info'
+                      : 'error';
+            $self->perl($error, level => $level);
+        }
+        $die_handler->(@_) if reftype($die_handler) eq 'CODE';
+        die $error;
+    };
+}
+
+sub remove_handlers {
+    my $self = shift;
+    $SIG{__WARN__} = 'DEFAULT';
+    $SIG{__DIE__}  = 'DEFAULT';
+    $self->_clear_warn_handler;
+    $self->_clear_die_handler;
 }
 
 __PACKAGE__->meta->make_immutable;

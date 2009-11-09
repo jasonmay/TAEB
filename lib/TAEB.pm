@@ -1,6 +1,6 @@
 package TAEB;
 use 5.008001;
-use TAEB::Util qw/:colors tile_types item_menu/;
+use TAEB::Util qw/:colors tile_types item_menu reftype/;
 
 use TAEB::OO;
 
@@ -266,6 +266,12 @@ class_has item_pool => (
         get_artifact  => 'get_artifact',
         seen_artifact => 'get_artifact',
     },
+);
+
+has _die_handler => (
+    is        => 'rw',
+    clearer   => '_clear_die_handler',
+    predicate => '_has_die_handler',
 );
 
 around action => sub {
@@ -763,20 +769,21 @@ sub reset_state {
 }
 
 sub setup_handlers {
-    $SIG{__WARN__} = sub {
-        my $method = $_[0] =~ /^Use of uninitialized / ? 'undef' : 'perl';
-        TAEB->log->$method($_[0], level => 'warning');
-    };
+    my $self = shift;
 
+    if ($self->_has_die_handler) {
+        confess("TAEB is trying to setup die handler multiple times");
+    }
+
+    my $die_handler = $SIG{__DIE__};
+    $self->_die_handler($die_handler);
     $SIG{__DIE__} = sub {
-        my $error = shift;
+        my ($error) = @_;
 
         # We want only the first line
         (my $message = $error) =~ s/\n.*//s;
 
         if ($message =~ /^The game has (ended|been saved)\./) {
-            TAEB->log->main($message, level => 'info');
-
             if ($message =~ /ended/) {
                 TAEB->destroy_saved_state;
             }
@@ -785,10 +792,6 @@ sub setup_handlers {
             }
         }
         else {
-            my $level = $message =~ /^Interrupted\./
-                      ? 'info'
-                      : 'error';
-            TAEB->log->perl($error, level => $level);
             # Use the emergency versions of quit/save here, not the actions.
             if (defined TAEB->config && defined TAEB->config->contents &&
                 TAEB->config->contents->{'kiosk_mode'}) {
@@ -802,14 +805,17 @@ sub setup_handlers {
         # A failsafe function that handles all the weird things that might
         # happen during NetHack exiting, e.g. unavailable lockfile.
         TAEB->interface->wait_for_termination;
+
+        $die_handler->(@_) if reftype($die_handler) eq 'CODE';
         die $error;
     };
     TAEB->monkey_patch;
 }
 
 sub remove_handlers {
-    $SIG{__WARN__} = 'DEFAULT';
+    my $self = shift;
     $SIG{__DIE__}  = 'DEFAULT';
+    $self->_clear_die_handler;
 }
 
 sub monkey_patch {
