@@ -3,12 +3,6 @@ use TAEB::OO;
 use MooseX::NonMoose;
 extends 'Term::VT102::ZeroBased';
 
-has log => (
-    is       => 'ro',
-    isa      => 'TAEB::Logger',
-    required => 1,
-);
-
 has topline => (
     is  => 'rw',
     isa => 'Str',

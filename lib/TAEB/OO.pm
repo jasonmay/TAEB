@@ -61,6 +61,7 @@ sub init_meta {
     my @base_class_roles = (
         'TAEB::Role::Initialize',
         'TAEB::Role::Subscription',
+        'TAEB::Role::Logger',
     );
     # the memory leak doesn't exist in 5.8, and will (hopefully) be fixed by
     # the 5.10.1 release

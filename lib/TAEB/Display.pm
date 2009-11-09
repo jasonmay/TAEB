@@ -9,12 +9,6 @@ use Scalar::Util qw(weaken);
 
 requires 'get_key';
 
-has log => (
-    is       => 'ro',
-    isa      => 'TAEB::Logger',
-    required => 1,
-);
-
 # whether or not this output writes to the terminal: if it does, we don't want
 # to also be sending warnings/errors there, for example.
 use constant to_screen => 0;
