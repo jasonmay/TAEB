@@ -60,50 +60,11 @@ sub _build_config_path {
 
 sub _log_container {
     my $self = shift;
-    my $container = weaken($self);
 
     container 'Log' => as {
         service dir => $self->config->taebdir_file('log');
         service log => (
-            block => sub {
-                my $s = shift;
-
-                my $log = TAEB::Logger->new(log_dir => $s->param('log_dir'));
-                $log->add_as_default(Log::Dispatch::Null->new(
-                    name => 'taeb-warning',
-                    min_level => 'warning',
-                    max_level => 'warning',
-                    callbacks => sub {
-                        my %args = @_;
-                        my $display = $container->fetch('Display/display')->get;
-                        # XXX: do we need to test for definedness?
-                        if (!$display->to_screen) {
-                            local $SIG{__WARN__};
-                            warn $args{message};
-                        }
-                    },
-                ));
-                $log->add_as_default(Log::Dispatch::Null->new(
-                    name => 'taeb-error',
-                    min_level => 'error',
-                    callbacks => sub {
-                        my %args = @_;
-                        my $display = $container->fetch('Display/display')->get;
-                        # XXX: do we need to test for definedness?
-                        if (!$display->to_screen) {
-                            local $SIG{__WARN__};
-                            confess $args{message};
-                        }
-                        else {
-                            # XXX: this needs to move from TAEB to TAEB::Display
-                            $display->complain(Carp::shortmess($args{message}));
-                        }
-                    },
-                ));
-                # XXX: this method needs to move from TAEB to TAEB::Logger
-                $log->setup_handlers;
-                return $log;
-            },
+            class        => 'TAEB::Logger',
             lifecycle    => 'Singleton',
             dependencies => wire_names(qw(dir)),
         );
