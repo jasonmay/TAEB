@@ -42,6 +42,7 @@ has container => (
     is      => 'ro',
     isa     => 'Bread::Board::Container',
     builder => '_build_container',
+    handles => [qw(fetch)],
 );
 
 sub _build_config_path {
