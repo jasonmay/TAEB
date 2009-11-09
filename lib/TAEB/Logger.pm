@@ -7,6 +7,12 @@ use TAEB::Util qw/weaken/;
 extends 'Log::Dispatch::Channels';
 with 'TAEB::Role::Config';
 
+has log_dir => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1,
+);
+
 has default_outputs => (
     is      => 'ro',
     isa     => 'HashRef[Log::Dispatch::Output]',
@@ -107,6 +113,7 @@ has twitter => (
 
 sub BUILD {
     my $self = shift;
+    $self->setup_handlers;
     # we don't initialize log files until they're used, so need to make sure
     # old ones don't stick around
     $self->_clean_log_dir;
