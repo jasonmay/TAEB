@@ -1184,7 +1184,7 @@ sub handle_more_menus {
 
 sub handle_menus {
     my $self = shift;
-    my $menu = NetHack::Menu->new(vt => TAEB->vt);
+    my $menu = NetHack::Menu->new(vt => TAEB->vt->vt_object);
 
     my $selector;
     my $committer = sub { $menu->commit };
