@@ -55,6 +55,7 @@ has stepped_on => (
     traits    => ['Counter'],
     handles   => {
         inc_stepped_on => 'inc',
+        dec_stepped_on => 'dec',
     },
     default  => 0,
 );
@@ -74,6 +75,10 @@ has y => (
 has searched => (
     is        => 'ro',
     traits    => ['Counter'],
+    handles   => {
+        inc_searched => 'inc',
+        dec_searched => 'dec',
+    },
     default   => 0,
 );
 
