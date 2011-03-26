@@ -52,7 +52,11 @@ has color => (
 
 has stepped_on => (
     is        => 'ro',
-    metaclass => 'Counter',
+    traits    => ['Counter'],
+    handles   => {
+        inc_stepped_on => 'inc',
+    },
+    default  => 0,
 );
 
 has x => (
@@ -69,7 +73,8 @@ has y => (
 
 has searched => (
     is        => 'ro',
-    metaclass => 'Counter',
+    traits    => ['Counter'],
+    default   => 0,
 );
 
 has explored => (

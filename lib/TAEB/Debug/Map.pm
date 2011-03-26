@@ -13,6 +13,7 @@ for my $name (qw/x y z z_index/) {
         traits  => ['Counter'],
         isa     => 'Int',
         is      => 'rw',
+        default => 0,
         handles => { "inc_$name" => 'inc' },
     );
 }

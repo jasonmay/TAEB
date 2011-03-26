@@ -52,19 +52,21 @@ sub has_projectile {
     return;
 }
 
-sub debug_line {
-    my $self = shift;
-    my @items;
-
-    return "No inventory." unless $self->has_items;
-
-    push @items, 'Inventory (' . $self->weight . ' hzm)';
-    for my $slot (sort $self->slots) {
-        push @items, sprintf '%s - %s', $slot, $self->get($slot)->debug_line;
-    }
-
-    return join "\n", @items;
-}
+# XXX I had to comment this out because it errors about overriding a delegate
+# with a local method
+#sub debug_line {
+#    my $self = shift;
+#    my @items;
+#
+#    return "No inventory." unless $self->has_items;
+#
+#    push @items, 'Inventory (' . $self->weight . ' hzm)';
+#    #for my $slot (sort $self->slots) {
+#    #    push @items, sprintf '%s - %s', $slot, $self->get($slot)->debug_line;
+#    #}
+#
+#    return join "\n", @items;
+#}
 
 subscribe got_item => sub {
     my $self  = shift;

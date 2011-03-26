@@ -11,7 +11,7 @@ has paused => (
 );
 
 has step => (
-    metaclass => 'Counter',
+    traits  => ['Counter'],
     is      => 'ro',
     default => -1,
     trigger => sub {

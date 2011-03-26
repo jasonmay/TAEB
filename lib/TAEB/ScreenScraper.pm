@@ -881,6 +881,7 @@ has calls_this_turn => (
         inc_calls_this_turn   => 'inc',
         reset_calls_this_turn => 'reset',
     },
+    default => 0,
 );
 
 has saw_floor_list_this_step => (
