@@ -1266,7 +1266,7 @@ sub handle_menus {
 
     return unless try { $menu->has_menu };
 
-    my $n = 50;
+    my $n = 0;
     until ($menu->at_end or ++$n > 50) {
         TAEB->write($menu->next);
         TAEB->process_input(0);
