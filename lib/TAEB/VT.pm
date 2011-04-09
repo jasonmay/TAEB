@@ -1,13 +1,8 @@
 package TAEB::VT;
 use TAEB::OO;
-use Term::VT102::XS;
-
-has vt_object => (
-    is  => 'ro',
-    isa => 'Term::VT102::XS',
-    handles => ['row_plaintext', 'row_attr', 'attr_unpack',
-                'rows', 'cols', 'process', 'option_set'],
-);
+#use MooseX::NonMoose::InsideOut;
+use MooseX::NonMoose;
+extends 'Term::VT102::ZeroBased';
 
 has topline => (
     is  => 'rw',
@@ -20,30 +15,6 @@ has rows_changed => (
     default => sub { [] },
 );
 
-around BUILDARGS => sub {
-    my $next  = shift;
-    my $class = shift;
-
-    my @vt_args = @_;
-    my $vt = Term::VT102::XS->new(@vt_args);
-    return $class->$next(vt_object => $vt);
-};
-
-around ['row_plaintext', 'row_attr'] => sub {
-    my $next = shift;
-    my $self = shift;
-    my ($y, $start, $end) = @_;
-    if (@_ > 1) {
-        return $self->$next($y + 1, $start + 1, $end + 1);
-    }
-    else {
-        return $self->$next($y + 1);
-    }
-};
-
-sub x { $_[0]->vt_object->x - 1 }
-sub y { $_[0]->vt_object->y - 1 }
-
 after process => sub {
     my $self = shift;
     $self->topline($self->row_plaintext(0));
@@ -51,16 +22,14 @@ after process => sub {
 
 sub BUILD {
     my $self = shift;
-    #  XXX unfortunately this will slow things down, but VT::XS doesn't
-    #  support option_set yet.
-    #$self->callback_set('ROWCHANGE', sub {
-    #    # The number of the row changed is the third arg to the
-    #    # callback function.
-    #    # XXX Term::VT102::ZeroBased appears not to change the offset to
-    #    # zero-based here; this workaround (the -1) needs removal if and
-    #    # when Term::VT102::ZeroBased is fixed.
-    #    $self->rows_changed->[$_[2]-1] = 1;
-    #}, undef);
+    $self->callback_set('ROWCHANGE', sub {
+        # The number of the row changed is the third arg to the
+        # callback function.
+        # XXX Term::VT102::ZeroBased appears not to change the offset to
+        # zero-based here; this workaround (the -1) needs removal if and
+        # when Term::VT102::ZeroBased is fixed.
+        $self->rows_changed->[$_[2]-1] = 1;
+    }, undef);
 }
 
 sub find_row {

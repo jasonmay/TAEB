@@ -89,7 +89,7 @@ class_has vt => (
     isa      => 'TAEB::VT',
     lazy     => 1,
     default  => sub {
-        my $vt = TAEB::VT->new(cols => 80, rows => 24);
+        my $vt = TAEB::VT->new(cols => 80, rows => 24, zerobased => 1);
         $vt->option_set(LINEWRAP => 1);
         $vt->option_set(LFTOCRLF => 1);
         return $vt;
@@ -324,8 +324,7 @@ sub iterate {
     catch {
         $self->display->deinitialize;
 
-        local $SIG{__DIE__};
-        die $_ unless $_ =~ /^The\ game\ has\ ended\.
+        warn $_ unless $_ =~ /^The\ game\ has\ ended\.
                              |The\ game\ has\ been\ saved\.
                              |The\ game\ could\ not\ start\./x;
 
